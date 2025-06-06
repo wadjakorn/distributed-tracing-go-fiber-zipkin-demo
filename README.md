@@ -2,9 +2,17 @@
 ## Using Go Fiber Zipkin
 
 ```
-go run .zipkin-demo-service-1/...
+docker compose up -d
 
-go run .zipkin-demo-service-2/...
+// or
+
+podman compose up -d
+
+cd zipkin-demo-service-1
+go run .
+
+cd zipkin-demo-service-2
+go run .
 ```
 
 ### Test Get
