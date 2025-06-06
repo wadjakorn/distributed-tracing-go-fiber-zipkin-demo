@@ -13,6 +13,10 @@ var (
 	AppName = "zipkin-demo-service-2"
 )
 
+type ErrorResponse struct {
+	Message string `json:"message"`
+}
+
 func FiberWebServer() (*fiber.App, context.Context) {
 	app := fiber.New(fiber.Config{
 		AppName:        AppName,
@@ -24,6 +28,16 @@ func FiberWebServer() (*fiber.App, context.Context) {
 		GetTracer(),
 		zipkin_http_middleware.SpanName("http_server"),
 	)))
+
+	app.Use(func(c *fiber.Ctx) error {
+		err := c.Next()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(ErrorResponse{
+				Message: err.Error(),
+			})
+		}
+		return err
+	})
 
 	return app, context.Background()
 }

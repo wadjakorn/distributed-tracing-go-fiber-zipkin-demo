@@ -28,16 +28,26 @@ func GetOrders(c *fiber.Ctx) error {
 		{ID: "3", Amount: 300.0, Status: "Shipped"},
 		{ID: "4", Amount: 400.0, Status: "Cancelled"},
 	}
-	filterOrders(ctx)
+	queryOrders(ctx)
 	return c.Status(fiber.StatusOK).JSON(mockOrders)
 }
 
-func filterOrders(ctx context.Context) {
-	span, _ := GetTracer().StartSpanFromContext(ctx, "filterOrders")
+func queryOrders(ctx context.Context) {
+	span, _ := GetTracer().StartSpanFromContext(ctx, "queryOrders")
 	defer span.Finish()
+
+	span.Tag("db.collection", "orders")
+	span.Tag("db.operation", "select")
 
 	// sleep to simulate processing time
 	time.Sleep(30 * time.Millisecond)
+
+	span.Annotate(time.Now(), "Preparing query for orders")
+
+	// Simulate a database operation
+	time.Sleep(100 * time.Millisecond)
+
+	span.Annotate(time.Now(), "Orders fetched from DB")
 }
 
 func CreateOrder(c *fiber.Ctx) error {
@@ -53,6 +63,7 @@ func CreateOrder(c *fiber.Ctx) error {
 	if req.Status == "" {
 		return fmt.Errorf("status cannot be empty")
 	}
+	queryOrders(ctx)
 	createOrderInDB(ctx)
 	resp := Order{
 		ID:     "new-order-id",
@@ -65,7 +76,16 @@ func CreateOrder(c *fiber.Ctx) error {
 func createOrderInDB(ctx context.Context) {
 	span, _ := GetTracer().StartSpanFromContext(ctx, "createOrderInDB")
 	defer span.Finish()
+	span.Tag("db.collection", "orders")
+	span.Tag("db.operation", "insert")
 
-	// sleep to simulate processing time
+	// Simulate a database operation
 	time.Sleep(100 * time.Millisecond)
+
+	span.Annotate(time.Now(), "Order created in DB")
+
+	// Simulate a database operation
+	time.Sleep(100 * time.Millisecond)
+
+	span.Annotate(time.Now(), "New order indexed in search service")
 }

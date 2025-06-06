@@ -16,6 +16,10 @@ type Order struct {
 	Status string  `json:"status"`
 }
 
+type ErrorResponse struct {
+	Message string `json:"message"`
+}
+
 func FetchOrders(c *fiber.Ctx) error {
 	span, ctx := GetTracer().StartSpanFromContext(c.Context(), "FetchOrders")
 	defer span.Finish()
@@ -57,14 +61,21 @@ func PlaceOrder(c *fiber.Ctx) error {
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
-	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("failed to create order, status code: %d", resp.StatusCode)
-	}
+
 	defer resp.Body.Close()
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("failed to read response body: %w", err)
 	}
+
+	if resp.StatusCode != http.StatusCreated {
+		var errorResponse ErrorResponse
+		if err := json.Unmarshal(b, &errorResponse); err != nil {
+			return fmt.Errorf("failed to unmarshal errorResponse: %w", err)
+		}
+		return fmt.Errorf("failed to create order, status code: %d, message: %s", resp.StatusCode, errorResponse.Message)
+	}
+
 	var order Order
 	if err := json.Unmarshal(b, &order); err != nil {
 		return fmt.Errorf("failed to unmarshal order: %w", err)
