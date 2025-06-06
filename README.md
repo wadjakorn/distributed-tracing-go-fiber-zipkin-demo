@@ -8,11 +8,10 @@ docker compose up -d
 
 podman compose up -d
 
-cd zipkin-demo-service-1
-go run .
+// split terminal and run these 2 cmd
 
-cd zipkin-demo-service-2
-go run .
+go run ./zipkin-demo-service-1
+go run ./zipkin-demo-service-2
 ```
 
 ### Test Get
